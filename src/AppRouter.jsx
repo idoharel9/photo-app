@@ -6,6 +6,11 @@ import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import Dashboard from './pages/Dashboard';
 import CreateEvent from './pages/CreateEvent';
+import Contact from './pages/Contact';
+import Privacy from './pages/Privacy';
+import FAQ from './pages/FAQ';
+import Terms from './pages/Terms';
+import Cookies from './pages/Cookies';
 
 export default function AppRouter() {
   return (
@@ -15,6 +20,11 @@ export default function AppRouter() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/faq" element={<FAQ />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/cookies" element={<Cookies />} />
 
         {/* Protected routes */}
         <Route

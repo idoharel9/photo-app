@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { auth } from '../firebase';
+import { auth, db } from '../firebase';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 import './Dashboard.css';
 
 export default function Dashboard() {
@@ -14,13 +14,15 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchUserData = async () => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        navigate('/login');
+        return;
+      }
+
       try {
-        const user = auth.currentUser;
-        if (!user) {
-          navigate('/login');
-          return;
-        }
+        setLoading(true);
+        setError(null);
 
         // Fetch user's events
         const eventsQuery = query(
@@ -40,7 +42,7 @@ export default function Dashboard() {
         
         if (userDocSnap.exists()) {
           const userData = userDocSnap.data();
-          setStorageLimit(userData.storageLimit || 0);
+          setStorageLimit(userData.storageLimit || 1024 * 1024 * 1024); // 1GB default
           setStorageUsed(userData.storageUsed || 0);
         } else {
           // If user document doesn't exist, create it with default values
@@ -54,9 +56,10 @@ export default function Dashboard() {
       } finally {
         setLoading(false);
       }
-    };
+    });
 
-    fetchUserData();
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
   }, [navigate]);
 
   const handleCreateEvent = () => {
@@ -122,16 +125,20 @@ export default function Dashboard() {
             Create New Event
           </button>
         </div>
-
         {events.length === 0 ? (
-          <p className="no-events">No events yet. Create your first event!</p>
+          <div className="no-events">
+            <p>You haven't created any events yet.</p>
+            <button onClick={handleCreateEvent} className="create-event-button">
+              Create Your First Event
+            </button>
+          </div>
         ) : (
           <div className="events-grid">
             {events.map(event => (
               <div key={event.id} className="event-card">
                 <h3>{event.name}</h3>
-                <p>{new Date(event.date).toLocaleDateString()}</p>
-                <p>{event.photoCount || 0} photos</p>
+                <p>Date: {new Date(event.date.toDate()).toLocaleDateString()}</p>
+                <p>Photos: {event.photoCount || 0}</p>
                 <button 
                   onClick={() => navigate(`/event/${event.id}`)}
                   className="view-event-button"

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
 
 export default function ProtectedRoute({ children }) {
   const [loading, setLoading] = useState(true);
@@ -10,11 +11,11 @@ export default function ProtectedRoute({ children }) {
   const location = useLocation();
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       try {
-        const user = auth.currentUser;
         if (!user) {
           setIsAuthenticated(false);
+          setHasSubscription(false);
           setLoading(false);
           return;
         }
@@ -29,22 +30,32 @@ export default function ProtectedRoute({ children }) {
         if (!userSnapshot.empty) {
           const userData = userSnapshot.docs[0].data();
           setHasSubscription(userData.subscriptionStatus === 'active');
+        } else {
+          // If user document doesn't exist, create it with default values
+          setHasSubscription(false);
         }
 
         setIsAuthenticated(true);
       } catch (error) {
         console.error('Error checking authentication:', error);
         setIsAuthenticated(false);
+        setHasSubscription(false);
       } finally {
         setLoading(false);
       }
-    };
+    });
 
-    checkAuth();
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
   }, []);
 
   if (loading) {
-    return <div className="loading">Loading...</div>;
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p>Loading...</p>
+      </div>
+    );
   }
 
   if (!isAuthenticated) {

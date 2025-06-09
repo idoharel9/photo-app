@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import './Dashboard.css';
 
@@ -10,6 +10,7 @@ export default function Dashboard() {
   const [storageUsed, setStorageUsed] = useState(0);
   const [storageLimit, setStorageLimit] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -34,19 +35,22 @@ export default function Dashboard() {
         setEvents(eventsList);
 
         // Fetch user's subscription data
-        const userDoc = await getDocs(query(
-          collection(db, 'users'),
-          where('uid', '==', user.uid)
-        ));
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDocSnap = await getDoc(userDocRef);
         
-        if (!userDoc.empty) {
-          const userData = userDoc.docs[0].data();
+        if (userDocSnap.exists()) {
+          const userData = userDocSnap.data();
           setStorageLimit(userData.storageLimit || 0);
           setStorageUsed(userData.storageUsed || 0);
+        } else {
+          // If user document doesn't exist, create it with default values
+          setStorageLimit(1024 * 1024 * 1024); // 1GB default
+          setStorageUsed(0);
         }
 
       } catch (error) {
         console.error('Error fetching user data:', error);
+        setError('Failed to load dashboard data. Please try refreshing the page.');
       } finally {
         setLoading(false);
       }
@@ -65,11 +69,28 @@ export default function Dashboard() {
       navigate('/login');
     } catch (error) {
       console.error('Error signing out:', error);
+      setError('Failed to log out. Please try again.');
     }
   };
 
   if (loading) {
-    return <div className="loading">Loading...</div>;
+    return (
+      <div className="dashboard-loading">
+        <div className="loading-spinner"></div>
+        <p>Loading your dashboard...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="dashboard-error">
+        <p>{error}</p>
+        <button onClick={() => window.location.reload()} className="retry-button">
+          Retry
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -86,7 +107,7 @@ export default function Dashboard() {
         <div className="storage-bar">
           <div 
             className="storage-used"
-            style={{ width: `${(storageUsed / storageLimit) * 100}%` }}
+            style={{ width: `${Math.min((storageUsed / storageLimit) * 100, 100)}%` }}
           />
         </div>
         <p>

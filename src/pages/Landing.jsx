@@ -1,9 +1,34 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { SUBSCRIPTION_PLANS } from '../config/paddle';
 import './Landing.css';
 
 export default function Landing() {
+  const [openFaqIndex, setOpenFaqIndex] = useState(null);
+
+  const faqs = [
+    {
+      question: "How does the QR code system work?",
+      answer: "Each photo is assigned a unique QR code that links directly to the digital version. When guests scan the code, they can instantly download their photos. The system is designed to be simple and user-friendly, requiring no technical knowledge to use."
+    },
+    {
+      question: "What types of events is this suitable for?",
+      answer: "Our system is perfect for weddings, corporate events, parties, and any occasion where you want to share photos instantly with guests. It's particularly popular for events where you want to provide a professional touch while making photo sharing easy and immediate."
+    },
+    {
+      question: "Can guests download photos without an account?",
+      answer: "Yes! Guests can access and download photos simply by scanning the QR code - no account creation required. This makes it extremely convenient for your guests to get their photos instantly."
+    },
+    {
+      question: "How long are the photos stored?",
+      answer: "Photos are stored securely in the cloud for 1 year, giving guests plenty of time to download their memories. You can also extend the storage period if needed."
+    }
+  ];
+
+  const toggleFaq = (index) => {
+    setOpenFaqIndex(openFaqIndex === index ? null : index);
+  };
+
   return (
     <div className="landing">
       <nav className="main-nav">
@@ -11,7 +36,7 @@ export default function Landing() {
           <Link to="/" className="logo">Magnet Photo QR</Link>
           <div className="nav-links">
             <Link to="#how-it-works">How it works</Link>
-            <Link to="#qa">Q&A</Link>
+            <Link to="#faq">FAQ</Link>
             <Link to="#pricing">Pricing</Link>
             <Link to="#contact">Contact</Link>
           </div>
@@ -50,25 +75,30 @@ export default function Landing() {
         </div>
       </section>
 
-      <section id="qa" className="qa-section">
+      <section id="faq" className="faq-section">
         <h2>Frequently Asked Questions</h2>
-        <div className="qa-container">
-          <div className="qa-item">
-            <h3>How does the QR code system work?</h3>
-            <p>Each photo is assigned a unique QR code that links directly to the digital version. When guests scan the code, they can instantly download their photos.</p>
-          </div>
-          <div className="qa-item">
-            <h3>What types of events is this suitable for?</h3>
-            <p>Our system is perfect for weddings, corporate events, parties, and any occasion where you want to share photos instantly with guests.</p>
-          </div>
-          <div className="qa-item">
-            <h3>Can guests download photos without an account?</h3>
-            <p>Yes! Guests can access and download photos simply by scanning the QR code - no account creation required.</p>
-          </div>
-          <div className="qa-item">
-            <h3>How long are the photos stored?</h3>
-            <p>Photos are stored securely in the cloud for 1 year, giving guests plenty of time to download their memories.</p>
-          </div>
+        <div className="faq-list">
+          {faqs.map((faq, index) => (
+            <div 
+              key={index} 
+              className={`faq-item ${openFaqIndex === index ? 'open' : ''}`}
+            >
+              <button 
+                className="faq-question"
+                onClick={() => toggleFaq(index)}
+              >
+                {faq.question}
+                <span className="faq-icon">{openFaqIndex === index ? '−' : '+'}</span>
+              </button>
+              <div className="faq-answer">
+                <p>{faq.answer}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="faq-more">
+          <p>Have more questions?</p>
+          <Link to="/faq" className="faq-link">View All FAQs</Link>
         </div>
       </section>
 

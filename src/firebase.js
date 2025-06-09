@@ -3,7 +3,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
 
 
 // כאן הכנס את ההגדרות שלך בדיוק כמו שקיבלת מאתר Firebase
@@ -30,7 +30,6 @@ export const storage = getStorage(app); // ← מוסיף גישה לאחסון
 export const db = getFirestore(app);
 
 // Enable persistence for offline support
-import { enableIndexedDbPersistence } from "firebase/firestore";
 enableIndexedDbPersistence(db).catch((err) => {
   if (err.code === 'failed-precondition') {
     console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time.');
